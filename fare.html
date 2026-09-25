@@ -235,6 +235,115 @@
   .error svg { flex-shrink: 0; margin-top: 0.15em; }
   .error ul { margin: 0; padding-left: 1.1rem; }
 
+  /* ---------- Loading state ---------- */
+  .loading-card {
+    margin-top: 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 1.75rem 1.85rem 1.6rem;
+    background: linear-gradient(180deg, var(--panel-raised), var(--panel));
+    animation: rise 0.3s ease both;
+  }
+
+  .loading-road {
+    position: relative;
+    height: 34px;
+    display: flex;
+    align-items: center;
+  }
+  .loading-road .surface {
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    height: 2px;
+    transform: translateY(-50%);
+    background-image: linear-gradient(to right, var(--mist) 0 6px, transparent 6px 14px);
+    background-size: 14px 2px;
+    background-repeat: repeat-x;
+    opacity: 0.45;
+  }
+  .loading-road .flag {
+    position: absolute;
+    right: 0;
+    width: 16px; height: 16px;
+    color: var(--saffron);
+    opacity: 0.9;
+  }
+  .loading-road .flag svg { width: 100%; height: 100%; }
+  .loading-cab {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 26px;
+    height: 26px;
+    transform: translate(0, -50%);
+    color: var(--saffron);
+    animation: drive 1.7s cubic-bezier(0.45, 0, 0.15, 1) infinite;
+    filter: drop-shadow(0 0 6px rgba(255,177,0,0.5));
+  }
+  .loading-cab svg { width: 100%; height: 100%; }
+  @keyframes drive {
+    0%   { left: 0%; }
+    92%  { left: calc(100% - 30px); }
+    100% { left: calc(100% - 30px); }
+  }
+
+  .loading-text-row {
+    margin-top: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .spinner {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(255,177,0,0.25);
+    border-top-color: var(--saffron);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-status {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--paper);
+    min-height: 1.3em;
+  }
+
+  .loading-bar-track {
+    margin-top: 0.95rem;
+    height: 4px;
+    border-radius: 100px;
+    background: rgba(247,245,240,0.08);
+    overflow: hidden;
+  }
+  .loading-bar-fill {
+    height: 100%;
+    width: 40%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--saffron), var(--teal));
+    animation: bar-slide 1.3s ease-in-out infinite;
+  }
+  @keyframes bar-slide {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(250%); }
+  }
+
+  #submit-btn .spinner {
+    display: none;
+    border-color: rgba(14,14,18,0.25);
+    border-top-color: var(--ink);
+  }
+  #submit-btn.is-loading svg:not(.spinner) { display: none; }
+  #submit-btn.is-loading .spinner { display: inline-block; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loading-cab { animation: none; left: calc(50% - 13px); }
+    .loading-bar-fill { animation: none; width: 60%; }
+  }
+
   .result {
     margin-top: 1.5rem;
     border: 1px solid rgba(0,194,168,0.3);
@@ -372,7 +481,8 @@
 
         <button type="submit" id="submit-btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          Estimate fare
+          <span class="spinner" aria-hidden="true"></span>
+          <span id="submit-btn-label">Estimate fare</span>
         </button>
 
         <div id="error" class="error" role="alert" hidden>
@@ -382,6 +492,23 @@
       </form>
     </div>
 
+    <section id="loading-card" class="loading-card" hidden aria-live="polite">
+      <div class="loading-road">
+        <span class="surface"></span>
+        <span class="loading-cab" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13l2-6a2 2 0 012-1h10a2 2 0 012 1l2 6M5 13h14M5 13a2 2 0 00-2 2v3a1 1 0 001 1h1a1 1 0 001-1v-1h12v1a1 1 0 001 1h1a1 1 0 001-1v-3a2 2 0 00-2-2"/><circle cx="7.5" cy="16.5" r="0.6"/><circle cx="16.5" cy="16.5" r="0.6"/></svg>
+        </span>
+        <span class="flag" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22V4"/><path d="M4 4h14l-3 4 3 4H4"/></svg>
+        </span>
+      </div>
+      <div class="loading-text-row">
+        <span class="spinner" aria-hidden="true"></span>
+        <span class="loading-status" id="loading-status">Checking live demand…</span>
+      </div>
+      <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
+    </section>
+
     <section id="result" class="result" hidden>
       <div>
         <span class="result-label">Estimated fare</span>
@@ -390,7 +517,7 @@
       <span class="result-tag" id="result-tag">Economy</span>
     </section>
 
-  
+    
   </main>
 
 <script>
@@ -403,6 +530,42 @@ const errorTextEl = document.getElementById("error-text");
 const resultEl = document.getElementById("result");
 const resultValueEl = document.getElementById("result-value");
 const resultTagEl = document.getElementById("result-tag");
+const loadingCardEl = document.getElementById("loading-card");
+const loadingStatusEl = document.getElementById("loading-status");
+const submitBtnLabelEl = document.getElementById("submit-btn-label");
+
+const LOADING_MESSAGES = [
+  "Checking live demand…",
+  "Counting nearby drivers…",
+  "Factoring in trip length…",
+  "Applying time-of-day pricing…",
+  "Crunching the numbers…",
+];
+
+let loadingMessageTimer = null;
+
+function startLoading() {
+  loadingCardEl.hidden = false;
+  submitBtn.classList.add("is-loading");
+  submitBtn.disabled = true;
+  submitBtnLabelEl.textContent = "Estimating…";
+
+  let i = 0;
+  loadingStatusEl.textContent = LOADING_MESSAGES[0];
+  loadingMessageTimer = setInterval(() => {
+    i = (i + 1) % LOADING_MESSAGES.length;
+    loadingStatusEl.textContent = LOADING_MESSAGES[i];
+  }, 1100);
+}
+
+function stopLoading() {
+  clearInterval(loadingMessageTimer);
+  loadingMessageTimer = null;
+  loadingCardEl.hidden = true;
+  submitBtn.classList.remove("is-loading");
+  submitBtn.disabled = false;
+  submitBtnLabelEl.textContent = "Estimate fare";
+}
 
 // Field constraints mirror the backend Pydantic model exactly.
 const NUMERIC_FIELDS = [
@@ -529,6 +692,7 @@ form.addEventListener("submit", async (event) => {
 
   hideFormError();
   resultEl.hidden = true;
+  loadingCardEl.hidden = true;
 
   // 1) Validate on the client first — never send an incomplete/invalid payload.
   const problems = validateForm();
@@ -548,9 +712,7 @@ form.addEventListener("submit", async (event) => {
     Expected_Ride_Duration: Number(document.getElementById("duration").value),
   };
 
-  submitBtn.disabled = true;
-  submitBtn.querySelector("svg").style.display = "none";
-  submitBtn.lastChild.textContent = "Estimating…";
+  startLoading();
 
   try {
     const response = await fetch(API_URL, {
@@ -587,9 +749,7 @@ form.addEventListener("submit", async (event) => {
       showFormError(err.message || "Unexpected error while estimating the fare.");
     }
   } finally {
-    submitBtn.disabled = false;
-    submitBtn.querySelector("svg").style.display = "";
-    submitBtn.lastChild.textContent = "Estimate fare";
+    stopLoading();
   }
 });
 
