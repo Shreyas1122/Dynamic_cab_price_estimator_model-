@@ -172,10 +172,4 @@ Just open the HTML file in a browser while the FastAPI server is running.
 
 ---
 
-## 🚀 Possible Improvements
 
-- Try non-linear models (Random Forest, Gradient Boosting, XGBoost) and compare R²/MAE against the linear baseline
-- Re-evaluate whether `Average_Ratings` and `Customer_Loyalty_Status` genuinely add no value with a feature-importance check, rather than dropping purely on correlation
-- Add cross-validation instead of a single train/test split for a more robust performance estimate
-- Add input logging / monitoring on the API for real-world drift detection
-- Containerize the API (Docker) for easier deployment
