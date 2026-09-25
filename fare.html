@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cab Price Estimator — Ola &amp; Uber Fare Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0E0E12;
+    --panel: #17171D;
+    --panel-raised: #1F2027;
+    --saffron: #FFB100;
+    --saffron-soft: #FFD37A;
+    --teal: #00C2A8;
+    --paper: #F7F5F0;
+    --mist: #9AA0AC;
+    --line: rgba(247, 245, 240, 0.09);
+    --danger: #FF6B5E;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: -20%;
+    right: -15%;
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(255,177,0,0.16), transparent 65%);
+    pointer-events: none;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    bottom: -25%;
+    left: -20%;
+    width: 55vw;
+    height: 55vw;
+    background: radial-gradient(circle, rgba(0,194,168,0.10), transparent 65%);
+    pointer-events: none;
+  }
+
+  .wrap {
+    position: relative;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 4rem;
+  }
+
+  .hero { margin-bottom: 2.5rem; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--saffron);
+    background: rgba(255,177,0,0.1);
+    border: 1px solid rgba(255,177,0,0.25);
+    padding: 0.35rem 0.75rem;
+    border-radius: 100px;
+  }
+  .badge svg { width: 14px; height: 14px; }
+
+  h1 {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 5vw, 2.7rem);
+    line-height: 1.15;
+    margin: 0.9rem 0 0.65rem;
+    max-width: 16ch;
+  }
+
+  .hero p {
+    color: var(--mist);
+    font-size: 1.02rem;
+    line-height: 1.6;
+    max-width: 44ch;
+    margin: 0;
+  }
+
+  .route {
+    margin-top: 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .route .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--teal); flex-shrink: 0; }
+  .route .pin {
+    width: 9px; height: 9px; flex-shrink: 0; background: var(--saffron);
+    clip-path: polygon(50% 0%, 100% 38%, 71% 100%, 29% 100%, 0% 38%);
+  }
+  .route .track {
+    flex: 1; height: 2px;
+    background-image: linear-gradient(to right, var(--mist) 0 6px, transparent 6px 12px);
+    background-size: 12px 2px;
+    background-repeat: repeat-x;
+    position: relative;
+    overflow: hidden;
+  }
+  .route .track::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -30%;
+    width: 30%; height: 100%;
+    background: linear-gradient(to right, transparent, var(--saffron), transparent);
+    animation: travel 2.6s linear infinite;
+  }
+  @keyframes travel { 0% { left: -30%; } 100% { left: 100%; } }
+
+  .card {
+    background: linear-gradient(180deg, var(--panel-raised), var(--panel));
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 1.85rem;
+    box-shadow: 0 20px 50px -25px rgba(0,0,0,0.6);
+  }
+
+  .card-title {
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin: 0 0 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card-title svg { width: 18px; height: 18px; color: var(--saffron); }
+
+  form { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+
+  .field { display: flex; flex-direction: column; gap: 0.45rem; }
+
+  .field label {
+    font-size: 0.83rem;
+    color: var(--mist);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .field label svg { width: 14px; height: 14px; opacity: 0.7; flex-shrink: 0; }
+
+  .field input,
+  .field select {
+    background: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.7rem 0.8rem;
+    color: var(--paper);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    width: 100%;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .field input:focus,
+  .field select:focus {
+    outline: none;
+    border-color: var(--saffron);
+    box-shadow: 0 0 0 3px rgba(255,177,0,0.15);
+  }
+
+  .field.invalid input,
+  .field.invalid select {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(255,107,94,0.15);
+  }
+
+  .field-msg {
+    font-size: 0.78rem;
+    color: var(--danger);
+    min-height: 1em;
+  }
+
+  .field select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239AA0AC' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+  }
+
+  #submit-btn {
+    grid-column: 1 / -1;
+    margin-top: 0.5rem;
+    background: linear-gradient(135deg, var(--saffron), var(--saffron-soft));
+    color: var(--ink);
+    border: none;
+    border-radius: 10px;
+    padding: 0.85rem;
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 0.98rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  #submit-btn svg { width: 17px; height: 17px; }
+  #submit-btn:hover { box-shadow: 0 10px 25px -10px rgba(255,177,0,0.6); transform: translateY(-1px); }
+  #submit-btn:active { transform: translateY(0); }
+  #submit-btn:disabled { background: var(--mist); cursor: wait; box-shadow: none; transform: none; }
+  #submit-btn:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+
+  .error {
+    grid-column: 1 / -1;
+    color: var(--danger);
+    font-size: 0.88rem;
+    margin: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    background: rgba(255,107,94,0.08);
+    border: 1px solid rgba(255,107,94,0.25);
+    border-radius: 10px;
+    padding: 0.7rem 0.85rem;
+  }
+  .error svg { flex-shrink: 0; margin-top: 0.15em; }
+  .error ul { margin: 0; padding-left: 1.1rem; }
+
+  .result {
+    margin-top: 1.5rem;
+    border: 1px solid rgba(0,194,168,0.3);
+    border-radius: 18px;
+    padding: 1.6rem 1.85rem;
+    background: linear-gradient(135deg, rgba(0,194,168,0.12), rgba(0,194,168,0.02));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: rise 0.35s ease both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .result-label { color: var(--mist); font-size: 0.88rem; display: block; margin-bottom: 0.3rem; }
+
+  .result-value { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 2.4rem; color: var(--teal); line-height: 1; }
+  .result-value .currency { font-size: 1.5rem; opacity: 0.85; margin-right: 0.15rem; }
+
+  .result-tag {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--teal);
+    background: rgba(0,194,168,0.14);
+    padding: 0.3rem 0.7rem;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .footnote { margin-top: 2.2rem; font-size: 0.82rem; color: var(--mist); text-align: center; }
+  .footnote code {
+    color: var(--paper);
+    background: var(--panel-raised);
+    border: 1px solid var(--line);
+    padding: 0.15rem 0.45rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+  }
+
+  @media (max-width: 540px) {
+    form { grid-template-columns: 1fr; }
+    .result { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <main class="wrap">
+    <section class="hero">
+      <span class="badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        Live pricing model
+      </span>
+      <h1>Cab price estimator for Ola &amp; Uber rides</h1>
+      <p>Enter the ride conditions below — rider demand, driver supply and trip length feed a trained model that predicts a fair fare in seconds.</p>
+      <div class="route" aria-hidden="true">
+        <span class="dot"></span>
+        <span class="track"></span>
+        <span class="pin"></span>
+      </div>
+    </section>
+
+    <div class="card">
+      <h2 class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13l2-6a2 2 0 012-1h10a2 2 0 012 1l2 6M5 13h14M5 13a2 2 0 00-2 2v3a1 1 0 001 1h1a1 1 0 001-1v-1h12v1a1 1 0 001 1h1a1 1 0 001-1v-3a2 2 0 00-2-2"/><circle cx="7.5" cy="16.5" r="0.6"/><circle cx="16.5" cy="16.5" r="0.6"/></svg>
+        Trip details
+      </h2>
+
+      <form id="fare-form" novalidate>
+        <div class="field" data-field="riders">
+          <label for="riders">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            Riders waiting
+          </label>
+          <input type="number" id="riders" name="Number_of_Riders" min="0" max="100000" value="100" required />
+          <span class="field-msg"></span>
+        </div>
+
+        <div class="field" data-field="drivers">
+          <label for="drivers">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13l2-6a2 2 0 012-1h10a2 2 0 012 1l2 6M5 13h14M5 13a2 2 0 00-2 2v3a1 1 0 001 1h1a1 1 0 001-1v-1h12v1a1 1 0 001 1h1a1 1 0 001-1v-3a2 2 0 00-2-2"/></svg>
+            Drivers available
+          </label>
+          <input type="number" id="drivers" name="Number_of_Drivers" min="0" max="10000" value="10" required />
+          <span class="field-msg"></span>
+        </div>
+
+        <div class="field" data-field="past-rides">
+          <label for="past-rides">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+            Rider's past rides
+          </label>
+          <input type="number" id="past-rides" name="Number_of_Past_Rides" min="0" max="100000" value="10" required />
+          <span class="field-msg"></span>
+        </div>
+
+        <div class="field" data-field="duration">
+          <label for="duration">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            Duration (min)
+          </label>
+          <input type="number" id="duration" name="Expected_Ride_Duration" min="0" max="300" value="30" required />
+          <span class="field-msg"></span>
+        </div>
+
+        <div class="field" data-field="time">
+          <label for="time">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            Time of booking
+          </label>
+          <select id="time" name="Time_of_Booking" required>
+            <option value="Morning">Morning</option>
+            <option value="Afternoon">Afternoon</option>
+            <option value="Evening">Evening</option>
+            <option value="Night">Night</option>
+          </select>
+          <span class="field-msg"></span>
+        </div>
+
+        <div class="field" data-field="vehicle">
+          <label for="vehicle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13l2-6a2 2 0 012-1h10a2 2 0 012 1l2 6M5 13h14v5H5z"/></svg>
+            Vehicle type
+          </label>
+          <select id="vehicle" name="Vehicle_Type" required>
+            <option value="Economy">Economy</option>
+            <option value="Premium">Premium</option>
+          </select>
+          <span class="field-msg"></span>
+        </div>
+
+        <button type="submit" id="submit-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          Estimate fare
+        </button>
+
+        <div id="error" class="error" role="alert" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <div id="error-text"></div>
+        </div>
+      </form>
+    </div>
+
+    <section id="result" class="result" hidden>
+      <div>
+        <span class="result-label">Estimated fare</span>
+        <span class="result-value"><span class="currency">₹</span><span id="result-value">0.00</span></span>
+      </div>
+      <span class="result-tag" id="result-tag">Economy</span>
+    </section>
+
+    <p class="footnote">Calling <code>http://127.0.0.1:8000/predict</code> — keep the FastAPI server running.</p>
+  </main>
+
+<script>
+const API_URL = "http://127.0.0.1:8000/predict";
+
+const form = document.getElementById("fare-form");
+const submitBtn = document.getElementById("submit-btn");
+const errorEl = document.getElementById("error");
+const errorTextEl = document.getElementById("error-text");
+const resultEl = document.getElementById("result");
+const resultValueEl = document.getElementById("result-value");
+const resultTagEl = document.getElementById("result-tag");
+
+// Field constraints mirror the backend Pydantic model exactly.
+const NUMERIC_FIELDS = [
+  { id: "riders",     label: "Riders waiting",      min: 0, max: 100000 },
+  { id: "drivers",    label: "Drivers available",   min: 0, max: 10000  },
+  { id: "past-rides", label: "Rider's past rides",  min: 0, max: 100000 },
+  { id: "duration",   label: "Duration (min)",      min: 0, max: 300   },
+];
+
+function fieldWrap(id) {
+  return document.querySelector(`.field[data-field="${id}"]`);
+}
+
+function setFieldError(id, message) {
+  const wrap = fieldWrap(id);
+  if (!wrap) return;
+  const msgEl = wrap.querySelector(".field-msg");
+  if (message) {
+    wrap.classList.add("invalid");
+    msgEl.textContent = message;
+  } else {
+    wrap.classList.remove("invalid");
+    msgEl.textContent = "";
+  }
+}
+
+function clearAllFieldErrors() {
+  NUMERIC_FIELDS.forEach((f) => setFieldError(f.id, ""));
+  setFieldError("time", "");
+  setFieldError("vehicle", "");
+}
+
+function showFormError(messageOrList) {
+  errorTextEl.innerHTML = "";
+  if (Array.isArray(messageOrList) && messageOrList.length > 1) {
+    const ul = document.createElement("ul");
+    messageOrList.forEach((m) => {
+      const li = document.createElement("li");
+      li.textContent = m;
+      ul.appendChild(li);
+    });
+    errorTextEl.appendChild(ul);
+  } else {
+    const text = Array.isArray(messageOrList) ? messageOrList[0] : messageOrList;
+    errorTextEl.textContent = text;
+  }
+  errorEl.hidden = false;
+}
+
+function hideFormError() {
+  errorEl.hidden = true;
+  errorTextEl.innerHTML = "";
+}
+
+// Client-side validation, run before any network call is made.
+function validateForm() {
+  clearAllFieldErrors();
+  const problems = [];
+
+  NUMERIC_FIELDS.forEach(({ id, label, min, max }) => {
+    const raw = document.getElementById(id).value.trim();
+
+    if (raw === "") {
+      setFieldError(id, "Required");
+      problems.push(`${label} is required.`);
+      return;
+    }
+
+    const value = Number(raw);
+
+    if (Number.isNaN(value)) {
+      setFieldError(id, "Must be a number");
+      problems.push(`${label} must be a valid number.`);
+      return;
+    }
+
+    if (value < min || value > max) {
+      setFieldError(id, `Must be ${min}–${max}`);
+      problems.push(`${label} must be between ${min} and ${max}.`);
+    }
+  });
+
+  const time = document.getElementById("time").value;
+  if (!time) {
+    setFieldError("time", "Required");
+    problems.push("Time of booking is required.");
+  }
+
+  const vehicle = document.getElementById("vehicle").value;
+  if (!vehicle) {
+    setFieldError("vehicle", "Required");
+    problems.push("Vehicle type is required.");
+  }
+
+  return problems;
+}
+
+// Turn a FastAPI/Pydantic error response into plain, readable messages.
+function parseBackendError(status, body) {
+  if (body && Array.isArray(body.detail)) {
+    // Standard Pydantic 422 validation error array.
+    return body.detail.map((d) => {
+      const field = Array.isArray(d.loc) ? d.loc[d.loc.length - 1] : "field";
+      return `${field}: ${d.msg}`;
+    });
+  }
+  if (body && typeof body.detail === "string") {
+    return [body.detail];
+  }
+  if (status === 404) {
+    return ["The /predict endpoint was not found. Check the API URL and route."];
+  }
+  if (status === 500) {
+    return ["The server hit an internal error while estimating the fare. Check the API logs."];
+  }
+  if (status >= 400) {
+    return [`Request failed with status ${status}.`];
+  }
+  return ["Something went wrong. Please try again."];
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  hideFormError();
+  resultEl.hidden = true;
+
+  // 1) Validate on the client first — never send an incomplete/invalid payload.
+  const problems = validateForm();
+  if (problems.length > 0) {
+    showFormError(problems);
+    return;
+  }
+
+  const vehicle = document.getElementById("vehicle").value;
+
+  const payload = {
+    Number_of_Riders: Number(document.getElementById("riders").value),
+    Number_of_Drivers: Number(document.getElementById("drivers").value),
+    Number_of_Past_Rides: Number(document.getElementById("past-rides").value),
+    Time_of_Booking: document.getElementById("time").value,
+    Vehicle_Type: vehicle,
+    Expected_Ride_Duration: Number(document.getElementById("duration").value),
+  };
+
+  submitBtn.disabled = true;
+  submitBtn.querySelector("svg").style.display = "none";
+  submitBtn.lastChild.textContent = "Estimating…";
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    let body = null;
+    try {
+      body = await response.json();
+    } catch {
+      body = null; // Non-JSON or empty response body.
+    }
+
+    if (!response.ok) {
+      showFormError(parseBackendError(response.status, body));
+      return;
+    }
+
+    if (!body || typeof body.Estimated_price !== "number") {
+      showFormError("The server responded, but no fare value was returned.");
+      return;
+    }
+
+    resultValueEl.textContent = body.Estimated_price.toFixed(2);
+    resultTagEl.textContent = vehicle;
+    resultEl.hidden = false;
+  } catch (err) {
+    if (err instanceof TypeError) {
+      // fetch() throws TypeError for network-level failures (CORS, server down, DNS, etc.)
+      showFormError("Can't reach the API. Is it running at 127.0.0.1:8000?");
+    } else {
+      showFormError(err.message || "Unexpected error while estimating the fare.");
+    }
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.querySelector("svg").style.display = "";
+    submitBtn.lastChild.textContent = "Estimate fare";
+  }
+});
+
+// Clear a field's error as soon as the user starts fixing it.
+[...NUMERIC_FIELDS.map((f) => f.id), "time", "vehicle"].forEach((id) => {
+  const el = document.getElementById(id);
+  el.addEventListener("input", () => setFieldError(id, ""));
+});
+</script>
+</body>
+</html>
